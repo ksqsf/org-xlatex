@@ -122,7 +122,7 @@ the point is at a formula."
   (string-replace "\n" " " (string-replace "'" "\\'" (string-replace "\\" "\\\\" latex))))
 
 (defun org-xlatex--build-js (latex)
-  "Build js code to rewrite the .latex-contents div to hold the latex code."
+  "Build js code to rewrite the DOM and typeset LATEX."
   (let ((template "oxlTypeset('%s');"))
     (format template (org-xlatex--escape latex))))
 
