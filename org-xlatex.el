@@ -1,5 +1,13 @@
 ;; org-xlatex.el --- instant LaTeX preview in an xwidget  -*- lexical-binding: t; -*-
 
+;; Copyright (C) 2023  ksqsf
+
+;; Author: ksqsf <justksqsf@gmail.com>
+;; URL: https://github.com/ksqsf/org-xlatex
+;; Keywords:
+;; Version: 0.1
+;; Package-Requires: ((emacs "28.1") (org "9.6"))
+
 ;;; Commentary:
 
 ;; This package provides a minor mode `org-xlatex-mode'.  It provides
@@ -38,6 +46,9 @@
 (defvar org-xlatex-xwidget nil
   "The xwidget used by org-xlatex.")
 (defconst org-xlatex-html-uri (concat "file://" (expand-file-name "org-xlatex.html" (file-name-directory (or load-file-name buffer-file-name)))))
+(defvar org-xlatex-last-latex)
+(defvar org-xlatex-last-js)
+(defvar org-xlatex-last-frame)
 
 ;;;###autoload
 (define-minor-mode org-xlatex-mode
@@ -70,7 +81,7 @@ the point is at a formula."
   (remove-hook 'after-delete-frame-functions 'org-xlatex--after-delete-frame-function)
   (org-xlatex--cleanup))
 
-(defun org-xlatex--timer-function (&rest args)
+(defun org-xlatex--timer-function (&rest)
   "Preview at point if the point is at a math formula."
   (if (and (derived-mode-p 'org-mode) (texmathp))
       (org-xlatex-preview)
