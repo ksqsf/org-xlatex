@@ -19,17 +19,27 @@
   (unless (featurep 'xwidget-internal)
     (error "Your Emacs was not built with Xwidget support")))
 
+(defgroup org-xlatex nil
+  "Instant LaTeX preview using xwidget and mathjax"
+  :group 'org
+  :prefix "org-xlatex-")
+(defcustom org-xlatex-width 400
+  "The width of the preview window."
+  :type 'integer
+  :group 'org-xlatex)
+(defcustom org-xlatex-height 200
+  "The height of the preview window."
+  :type 'integer
+  :group 'org-xlatex)
+
+(defvar org-xlatex-timer nil)
 (defvar org-xlatex-frame nil
   "The child frame used by org-xlatex.")
-
 (defvar org-xlatex-xwidget nil
   "The xwidget used by org-xlatex.")
-
-(defvar org-xlatex-width 400)
-(defvar org-xlatex-height 200)
-(defvar org-xlatex-timer nil)
 (defconst org-xlatex-html-uri (concat "file://" (expand-file-name "org-xlatex.html" (file-name-directory (or load-file-name buffer-file-name)))))
 
+;;;###autoload
 (define-minor-mode org-xlatex-mode
   "Toggle org-xlatex-mode.
 Interactively with no argument, this command tggles the mode.
@@ -113,10 +123,6 @@ the point is at a formula."
        (- (org-element-property :end context)
 	  (org-element-property :post-blank context))))))
 
-(defun test-html ()
-  (interactive)
-  (xwidget-webkit-browse-url org-xlatex-html-uri))
-
 (defun org-xlatex--escape (latex)
   "Escape LaTeX code so that it can be used as JS strings."
   (string-replace "\n" " " (string-replace "'" "\\'" (string-replace "\\" "\\\\" latex))))
@@ -155,6 +161,7 @@ the point is at a formula."
   (setq org-xlatex-last-js (org-xlatex--build-js latex))
   (xwidget-webkit-execute-script org-xlatex-xwidget org-xlatex-last-js))
 
+;;;###autoload
 (defun org-xlatex-preview ()
   "Preview the LaTeX formula inside a child frame at the point."
   (interactive)
