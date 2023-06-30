@@ -132,7 +132,6 @@ the point is at a formula."
   (make-frame-visible org-xlatex-frame)
   (select-frame parent-frame)
   (set-frame-size org-xlatex-frame org-xlatex-width org-xlatex-height t)
-  ;; todo: find the correct screen position of the point
   (with-selected-frame parent-frame
     (let* ((context (org-element-context))
            (latex-beg (org-element-property :begin context))
