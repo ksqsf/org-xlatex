@@ -22,6 +22,7 @@
 
 (require 'org)
 (require 'xwidget)
+(require 'texmathp)
 
 (eval-and-compile
   (unless (featurep 'xwidget-internal)
@@ -49,6 +50,34 @@
 (defvar org-xlatex-last-latex)
 (defvar org-xlatex-last-js)
 (defvar org-xlatex-last-frame)
+
+(defvar org-xlatex-frame-parameters
+  '((left . -1)
+    (top . -1)
+    (width . 0)
+    (height . 0)
+
+    (no-accept-focus . t)
+    (no-focus-on-map . t)
+    (skip-taskbar . t)
+    (min-width . 0)
+    (min-height . 0)
+    (internal-border-width . 1)
+    (vertical-scroll-bars . nil)
+    (horizontal-scroll-bars . nil)
+    (right-fringe . 0)
+    (left-fringe . 0)
+    (menu-bar-lines . 0)
+    (tool-bar-lines . 0)
+    (tab-bar-lines . 0)
+    (line-spacing . 0)
+    (unsplittable . t)
+    (undecorated . t)
+    (visibility . nil)
+    (no-other-frame . t)
+    (cursor-type . nil)
+    (desktop-dont-save . t))
+  "The default frame parameters to create the frame.")
 
 ;;;###autoload
 (define-minor-mode org-xlatex-mode
@@ -98,14 +127,12 @@ the point is at a formula."
   (if (and org-xlatex-frame (frame-live-p org-xlatex-frame))
       org-xlatex-frame
     (org-xlatex--cleanup)
-    (setq org-xlatex-frame (make-frame '((visibility . t)
-                                         (undecorated . t)
-                                         (no-accept-focus . t)
-                                         (minibuffer . nil))))
+    (setq org-xlatex-frame (make-frame org-xlatex-frame-parameters))
     (with-selected-frame org-xlatex-frame
       (delete-other-windows)
       (switch-to-buffer " *org-xlatex*")
       (setq mode-line-format nil)
+      (erase-buffer)
       (insert " ")
       (setq org-xlatex-xwidget (xwidget-insert (point-min) 'webkit "org-xlatex" org-xlatex-width org-xlatex-height))
       (xwidget-webkit-goto-uri org-xlatex-xwidget org-xlatex-html-uri))
@@ -172,17 +199,19 @@ the point is at a formula."
   (setq org-xlatex-last-js (org-xlatex--build-js latex))
   (xwidget-webkit-execute-script org-xlatex-xwidget org-xlatex-last-js))
 
-;;;###autoload
 (defun org-xlatex-preview ()
-  "Preview the LaTeX formula inside a child frame at the point."
-  (interactive)
+  "Preview the LaTeX formula inside a child frame at the point.
+
+This function should only be used from `org-xlatex-mode'.  This
+is due to MathJax's asynchronous typesetting process: sometimes
+the first few typesetting requests are ignored (during the
+initialization of mathjax).  Therefore, if you directly call
+this, chances are you will see a blank preview."
   (setq org-xlatex-last-frame (selected-frame))
   (org-xlatex--ensure-frame)
-  (let ((latex (org-xlatex--latex-at-point)))
-    (when latex
-      (org-xlatex--update latex)
-      (org-xlatex--expose org-xlatex-last-frame)
-      (select-frame org-xlatex-last-frame))))
+  (when-let ((latex (org-xlatex--latex-at-point)))
+    (org-xlatex--update latex)
+    (org-xlatex--expose org-xlatex-last-frame)))
 
 (provide 'org-xlatex)
 ;;; org-xlatex.el ends here
