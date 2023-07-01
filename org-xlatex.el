@@ -15,6 +15,9 @@
 ;; in an xwidget inside a child frame.  The child frame automatically
 ;; appears and renders the formula at the point.
 
+;; You can turn off and then turn on `org-xlatex-mode' to reset the
+;; internal states, in case you run into problems.
+
 ;; org-xlatex is self-contained.  It does not require any external
 ;; programs.
 
@@ -136,6 +139,11 @@ the point is at a formula."
       (delete-other-windows)
       (switch-to-buffer " *org-xlatex*")
       (setq mode-line-format nil)
+      (setq header-line-format nil)
+      (when (bound-and-true-p global-tab-line-mode)
+        (setq tab-line-format nil))
+      (setq display-line-numbers nil)
+      (set-window-dedicated-p nil t)
       (erase-buffer)
       (insert " ")
       (setq org-xlatex-xwidget (xwidget-insert (point-min) 'webkit "org-xlatex" org-xlatex-width org-xlatex-height))
