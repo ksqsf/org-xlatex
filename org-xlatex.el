@@ -6,7 +6,7 @@
 ;; URL: https://github.com/ksqsf/org-xlatex
 ;; Keywords:
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (org "9.6"))
+;; Package-Requires: ((emacs "28.1") (org "9.6") (auctex "13.1"))
 
 ;;; Commentary:
 
@@ -81,7 +81,7 @@ the point is at a formula."
   (remove-hook 'after-delete-frame-functions 'org-xlatex--after-delete-frame-function)
   (org-xlatex--cleanup))
 
-(defun org-xlatex--timer-function (&rest)
+(defun org-xlatex--timer-function (&rest _ignored)
   "Preview at point if the point is at a math formula."
   (if (and (derived-mode-p 'org-mode) (texmathp))
       (org-xlatex-preview)
