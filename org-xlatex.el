@@ -190,7 +190,7 @@ the point is at a formula."
            (latex-end-posn (posn-at-point latex-end))
            (latex-end-y (or (cdr (posn-x-y latex-end-posn))
                             (cdr (posn-x-y (posn-at-point)))))
-           (y (+ 40 latex-end-y)))
+           (y (+ (* 2 (pixel-line-height)) latex-end-y)))
       (set-frame-position org-xlatex-frame latex-beg-x y))))
 
 (defun org-xlatex--hide ()
@@ -216,6 +216,14 @@ this, chances are you will see a blank preview."
   (when-let ((latex (org-xlatex--latex-at-point)))
     (org-xlatex--update latex)
     (org-xlatex--expose org-xlatex-last-frame)))
+
+(defun org-xlatex--reset-frame ()
+  (org-xlatex--cleanup)
+  (org-xlatex--ensure-frame))
+(with-eval-after-load 'tab-bar
+  (add-hook 'tab-bar-mode-hook #'org-xlatex--reset-frame))
+(with-eval-after-load 'tab-line
+  (add-hook 'tab-line-mode-hook #'org-xlatex--reset-frame))
 
 (provide 'org-xlatex)
 ;;; org-xlatex.el ends here
