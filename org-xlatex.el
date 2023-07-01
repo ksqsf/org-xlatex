@@ -6,7 +6,7 @@
 ;; URL: https://github.com/ksqsf/org-xlatex
 ;; Keywords:
 ;; Version: 0.1
-;; Package-Requires: ((emacs "28.1") (org "9.6") (auctex "13.1"))
+;; Package-Requires: ((emacs "28.1") (org "9.6"))
 
 ;;; Commentary:
 
@@ -22,7 +22,6 @@
 
 (require 'org)
 (require 'xwidget)
-(require 'texmathp)
 
 (eval-and-compile
   (unless (featurep 'xwidget-internal)
@@ -112,7 +111,7 @@ the point is at a formula."
 
 (defun org-xlatex--timer-function (&rest _ignored)
   "Preview at point if the point is at a math formula."
-  (if (and (derived-mode-p 'org-mode) (texmathp))
+  (if (and (derived-mode-p 'org-mode) (org-inside-LaTeX-fragment-p))
       (org-xlatex-preview)
     (org-xlatex--hide)))
 
