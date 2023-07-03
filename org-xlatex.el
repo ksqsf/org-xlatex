@@ -42,6 +42,10 @@
   "The height of the preview window."
   :type 'integer
   :group 'org-xlatex)
+(defcustom org-xlatex-position-indicator nil
+  "Display an indicator for the current poisition in the preview."
+  :type 'bool
+  :group 'org-xlatex)
 
 (defvar org-xlatex-timer nil)
 (defvar org-xlatex-frame nil
@@ -168,10 +172,14 @@ the point is at a formula."
   (let ((context (org-element-context)))
     (when (or (eq 'latex-fragment (org-element-type context))
               (eq 'latex-environment (org-element-type context)))
-      (buffer-substring-no-properties
-       (org-element-property :begin context)
-       (- (org-element-property :end context)
-	  (org-element-property :post-blank context))))))
+      (let ((beg (org-element-property :begin context))
+            (end (- (org-element-property :end context)
+	            (org-element-property :post-blank context))))
+        (if org-xlatex-position-indicator
+            (concat (buffer-substring-no-properties beg (point))
+                    "{\\color{red}|}"
+                    (buffer-substring-no-properties (point) end))
+          (buffer-substring-no-properties beg end))))))
 
 (defun org-xlatex--escape (latex)
   "Escape LaTeX code so that it can be used as JS strings."
