@@ -25,6 +25,7 @@
 
 (require 'org)
 (require 'xwidget)
+(require 'pixel-scroll)
 
 (eval-and-compile
   (unless (featurep 'xwidget-internal)
