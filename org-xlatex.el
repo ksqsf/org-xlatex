@@ -121,8 +121,8 @@ the point is at a formula."
 
 (defun org-xlatex--timer-function (&rest _ignored)
   "Preview at point if the point is at a math formula."
-  (if (and org-xlatex-mode
-           (or (derived-mode-p 'org-mode)
+  (if (and (or (and (derived-mode-p 'org-mode)
+                    org-xlatex-mode)
                ;; for org-edit-special
                (and (string-match "\\*Org Src.*" (buffer-name))
                     (or (derived-mode-p 'latex-mode)
