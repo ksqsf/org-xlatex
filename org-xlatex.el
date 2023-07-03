@@ -108,6 +108,8 @@ the point is at a formula."
   "Arrange the org-xlatex frame to be displayed when the point enters LaTeX fragments or environments."
   (org-xlatex--cleanup)
   (add-hook 'after-delete-frame-functions 'org-xlatex--after-delete-frame-function)
+  (when (and org-xlatex-timer (timerp org-xlatex-timer))
+    (cancel-timer org-xlatex-timer))
   (setq org-xlatex-timer (run-with-idle-timer 0.1 'repeat 'org-xlatex--timer-function)))
 
 (defun org-xlatex--teardown ()
@@ -119,7 +121,8 @@ the point is at a formula."
 
 (defun org-xlatex--timer-function (&rest _ignored)
   "Preview at point if the point is at a math formula."
-  (if (and (or (derived-mode-p 'org-mode)
+  (if (and org-xlatex-mode
+           (or (derived-mode-p 'org-mode)
                ;; for org-edit-special
                (and (string-match "\\*Org Src.*" (buffer-name))
                     (or (derived-mode-p 'latex-mode)
