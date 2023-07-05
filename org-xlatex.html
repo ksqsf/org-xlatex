@@ -21,7 +21,6 @@
                                               .then(() => {
                                                   MathJax.typesetClear([document.body]);
                                                   MathJax.texReset();
-                                                  document.body.removeAttribute('style');
                                                   document.body.innerHTML = latex;
                                                   return MathJax.typesetPromise([document.body]);
                                               })
@@ -31,9 +30,6 @@
         </script>
         <style>
          * {}
-         body {
-           display: inline;  
-         }
         </style>
     </head>
     <body></body>
