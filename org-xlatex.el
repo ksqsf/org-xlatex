@@ -47,6 +47,10 @@
   "Display an indicator for the current poisition in the preview."
   :type 'bool
   :group 'org-xlatex)
+(defcustom org-xlatex-frame-adaptive-size t
+  "Automatically adjust the width and/or the height of the preview frame when necessary."
+  :type 'bool
+  :group 'org-xlatex)
 
 (defvar org-xlatex-timer nil)
 (defvar org-xlatex-frame nil
@@ -83,6 +87,7 @@
     (visibility . nil)
     (no-other-frame . t)
     (cursor-type . nil)
+    (minibuffer . nil)
     (desktop-dont-save . t))
   "The default frame parameters to create the frame.")
 
@@ -155,6 +160,8 @@ the point is at a formula."
       (erase-buffer)
       (insert " ")
       (setq org-xlatex-xwidget (xwidget-insert (point-min) 'webkit "org-xlatex" org-xlatex-width org-xlatex-height))
+      (xwidget-put org-xlatex-xwidget 'callback #'xwidget-webkit-callback)
+      (xwidget-put org-xlatex-xwidget 'display-callback #'xwidget-webkit-display-callback)
       (xwidget-webkit-goto-uri org-xlatex-xwidget org-xlatex-html-uri))
     org-xlatex-frame))
 
@@ -194,12 +201,28 @@ the point is at a formula."
   (let ((template "oxlTypeset('%s');"))
     (format template (org-xlatex--escape latex))))
 
+(defun org-xlatex--resize (w h)
+  "Resize both the xwidget and its container."
+  (set-frame-size org-xlatex-frame w h t)
+  (xwidget-resize org-xlatex-xwidget w h))
+
 (defun org-xlatex--expose (parent-frame)
   "Expose the child frame."
   (set-frame-parameter org-xlatex-frame 'parent-frame parent-frame)
   (make-frame-visible org-xlatex-frame)
   (select-frame parent-frame)
-  (set-frame-size org-xlatex-frame org-xlatex-width org-xlatex-height t)
+  (if (not org-xlatex-frame-adaptive-size)
+      (org-xlatex--resize org-xlatex-width org-xlatex-height)
+    ;; Adaptively set frame size
+    (xwidget-webkit-execute-script org-xlatex-xwidget "oxlSize();"
+                                   #'(lambda (size)
+                                       (let* ((w0 (frame-width org-xlatex-frame))
+                                              (h0 (frame-height org-xlatex-frame))
+                                              (w1 (ceiling (aref size 0)))
+                                              (h1 (ceiling (aref size 1)))
+                                              (w (max org-xlatex-width w0 w1))
+                                              (h (max org-xlatex-height h0 h1)))
+                                         (org-xlatex--resize w h)))))
   (with-selected-frame parent-frame
     (let* ((context (org-element-context))
            (latex-beg (org-element-property :begin context))
