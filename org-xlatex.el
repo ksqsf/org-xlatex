@@ -185,10 +185,21 @@ the point is at a formula."
       (erase-buffer)
       (insert " ")
       (setq org-xlatex-xwidget (xwidget-insert (point-min) 'webkit "org-xlatex" org-xlatex-width org-xlatex-height))
-      (xwidget-put org-xlatex-xwidget 'callback #'xwidget-webkit-callback)
+      (xwidget-put org-xlatex-xwidget 'callback #'org-xlatex--xwidget-webkit-callback)
       (xwidget-put org-xlatex-xwidget 'display-callback #'xwidget-webkit-display-callback)
       (xwidget-webkit-goto-uri org-xlatex-xwidget org-xlatex-html-uri))
     org-xlatex-frame))
+
+(defun org-xlatex--xwidget-webkit-callback (xwidget xwidget-event-type)
+  "`xwidget-webkit-callback' but restricted to javascript-callback."
+  (if (not (buffer-live-p (xwidget-buffer xwidget)))
+      (xwidget-log
+       "error: callback called for xwidget with dead buffer")
+    (cond ((eq xwidget-event-type 'javascript-callback)
+           (let ((proc (nth 3 last-input-event))
+                 (arg  (nth 4 last-input-event)))
+             (funcall proc arg)))
+          (t (xwidget-log "unhandled event:%s" xwidget-event-type)))))
 
 (defun org-xlatex--cleanup ()
   "Release resources used by org-xlatex."
