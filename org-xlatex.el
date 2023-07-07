@@ -52,7 +52,7 @@
   :type 'bool
   :group 'org-xlatex)
 (defcustom org-xlatex-position-function #'identity
-  "A function for positioning the preview frame.
+  "A function for transforming the default position of the preview frame.
 
 The function receives the computed, default coordinates (as a
 cons pair (X . Y)), and should return another cons pair (X . Y)
@@ -71,10 +71,10 @@ will move the child frame downwards by one more line."
   :type 'function
   :group 'org-xlatex)
 (defcustom org-xlatex-size-function #'identity
-  "A function for resizing the preview frame.
+  "A function for transforming the default size of the preview frame.
 
-The function receives the computed, default coordinates (as a
-cons pair (WIDTH . HEIGHT)), and should return another cons
+The function receives the computed, default size (as a cons
+pair (WIDTH . HEIGHT)), and should return another cons
 pair (WIDTH . HEIGHT) representing the expected pixelwise size of
 the preview child frame.
 
