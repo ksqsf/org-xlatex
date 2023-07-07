@@ -144,7 +144,6 @@ the point is at a formula."
 (defun org-xlatex--setup ()
   "Arrange the org-xlatex frame to be displayed when the point enters LaTeX fragments or environments."
   (org-xlatex--cleanup)
-  (add-hook 'after-delete-frame-functions 'org-xlatex--after-delete-frame-function)
   (when (and org-xlatex-timer (timerp org-xlatex-timer))
     (cancel-timer org-xlatex-timer))
   (setq org-xlatex-timer (run-with-idle-timer 0.1 'repeat 'org-xlatex--timer-function)))
@@ -153,7 +152,6 @@ the point is at a formula."
   "Disable hooks and timers set up by org-xlatex."
   (cancel-timer org-xlatex-timer)
   (setq org-xlatex-timer nil)
-  (remove-hook 'after-delete-frame-functions 'org-xlatex--after-delete-frame-function)
   (org-xlatex--cleanup))
 
 (defun org-xlatex--timer-function (&rest _ignored)
@@ -167,12 +165,6 @@ the point is at a formula."
            (org-inside-LaTeX-fragment-p))
       (org-xlatex-preview)
     (org-xlatex--hide)))
-
-(defun org-xlatex--after-delete-frame-function (frame)
-  "Check if the newly deleted frame was org-xlatex."
-  (when (eq frame org-xlatex-frame)
-    (org-xlatex--cleanup)
-    (setq org-xlatex-frame nil)))
 
 (defun org-xlatex--ensure-frame ()
   "Get the current org-xlatex-frame; initialize one if it does not exist."
@@ -257,7 +249,6 @@ This function will call `org-xlatex-position-function'."
   "Expose the child frame."
   (set-frame-parameter org-xlatex-frame 'parent-frame parent-frame)
   (make-frame-visible org-xlatex-frame)
-  (select-frame parent-frame)
   (if (not org-xlatex-frame-adaptive-size)
       (org-xlatex--resize org-xlatex-width org-xlatex-height)
     ;; Adaptively set frame size
