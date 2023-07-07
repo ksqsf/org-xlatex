@@ -80,8 +80,9 @@ the preview child frame.
 
 `identity' means accepting the default size.
 
-The default size is (`org-xlatex-width', `org-xlatex-height'),
-but extended accordingly when the LaTeX preview gets too large.")
+The default size is (`org-xlatex-width' . `org-xlatex-height'),
+but extended accordingly when the LaTeX preview gets too large,
+which is controlled by `org-xlatex-frame-adaptive-size'.")
 
 
 (defvar org-xlatex-timer nil)
