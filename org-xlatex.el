@@ -51,6 +51,38 @@
   "Automatically adjust the width and/or the height of the preview frame when necessary."
   :type 'bool
   :group 'org-xlatex)
+(defcustom org-xlatex-position-function #'identity
+  "A function for positioning the preview frame.
+
+The function receives the computed, default coordinates (as a
+cons pair (X . Y)), and should return another cons pair (X . Y)
+representing the pixel coordination of the preview child frame
+relative to the main frame.
+
+`identity' means accepting the default coordinates.
+
+The default coordinates are the beginning point of the LaTeX
+fragment with a vertical offset of 2 lines downwards.
+
+As an example of customization, the function
+  (lambda (xy) (cons (car xy)
+                     (+ (cdr xy) (pixel-line-height))))
+will move the child frame downwards by one more line."
+  :type 'function
+  :group 'org-xlatex)
+(defcustom org-xlatex-size-function #'identity
+  "A function for resizing the preview frame.
+
+The function receives the computed, default coordinates (as a
+cons pair (WIDTH . HEIGHT)), and should return another cons
+pair (WIDTH . HEIGHT) representing the expected pixelwise size of
+the preview child frame.
+
+`identity' means accepting the default size.
+
+The default size is (`org-xlatex-width', `org-xlatex-height'),
+but extended accordingly when the LaTeX preview gets too large.")
+
 
 (defvar org-xlatex-timer nil)
 (defvar org-xlatex-frame nil
@@ -203,9 +235,14 @@ the point is at a formula."
     (format template (org-xlatex--escape latex))))
 
 (defun org-xlatex--resize (w h)
-  "Resize both the xwidget and its container."
-  (set-frame-size org-xlatex-frame w h t)
-  (xwidget-resize org-xlatex-xwidget w h))
+  "Resize both the xwidget and its container.
+
+This function will call `org-xlatex-size-function'."
+  (let* ((real-size (funcall org-xlatex-size-function (cons w h)))
+         (real-w (car real-size))
+         (real-h (cdr real-size)))
+    (set-frame-size org-xlatex-frame real-w real-h t)
+    (xwidget-resize org-xlatex-xwidget real-w real-h)))
 
 (defun org-xlatex--expose (parent-frame)
   "Expose the child frame."
@@ -237,8 +274,11 @@ the point is at a formula."
            (y (+ (* 2 (pixel-line-height)) latex-end-y))
            (edges (window-edges nil nil nil t))
            (x (+ latex-beg-x (car edges)))
-           (y (+ y (cadr edges))))
-      (set-frame-position org-xlatex-frame x y))))
+           (y (+ y (cadr edges)))
+           (real-xy (funcall org-xlatex-position-function (cons x y)))
+           (real-x (car real-xy))
+           (real-y (cdr real-xy)))
+      (set-frame-position org-xlatex-frame real-x real-y))))
 
 (defun org-xlatex--hide ()
   (when (and org-xlatex-frame (frame-live-p org-xlatex-frame))
