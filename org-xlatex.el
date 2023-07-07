@@ -244,6 +244,15 @@ This function will call `org-xlatex-size-function'."
     (set-frame-size org-xlatex-frame real-w real-h t)
     (xwidget-resize org-xlatex-xwidget real-w real-h)))
 
+(defun org-xlatex--position (x y)
+  "Position `org-xlatex-frame' correctly.
+
+This function will call `org-xlatex-position-function'."
+  (let* ((xy1 (funcall org-xlatex-position-function (cons x y)))
+         (x1 (car xy1))
+         (y1 (cdr xy1)))
+    (set-frame-position org-xlatex-frame x1 y1)))
+
 (defun org-xlatex--expose (parent-frame)
   "Expose the child frame."
   (set-frame-parameter org-xlatex-frame 'parent-frame parent-frame)
@@ -274,11 +283,12 @@ This function will call `org-xlatex-size-function'."
            (y (+ (* 2 (pixel-line-height)) latex-end-y))
            (edges (window-edges nil nil nil t))
            (x (+ latex-beg-x (car edges)))
-           (y (+ y (cadr edges)))
-           (real-xy (funcall org-xlatex-position-function (cons x y)))
-           (real-x (car real-xy))
-           (real-y (cdr real-xy)))
-      (set-frame-position org-xlatex-frame real-x real-y))))
+           (y (+ y
+                 (cadr edges)
+                 (if (fboundp 'window-tab-line-height)
+                     (window-tab-line-height)
+                   0))))
+      (org-xlatex--position x y))))
 
 (defun org-xlatex--hide ()
   (when (and org-xlatex-frame (frame-live-p org-xlatex-frame))
