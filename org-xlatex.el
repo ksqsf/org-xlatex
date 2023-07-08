@@ -1,4 +1,4 @@
-;; org-xlatex.el --- instant LaTeX preview in an xwidget  -*- lexical-binding: t; -*-
+;;; org-xlatex.el --- instant LaTeX preview in an xwidget  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2023  ksqsf
 
