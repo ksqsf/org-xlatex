@@ -1,4 +1,4 @@
-;;; org-xlatex.el --- instant LaTeX preview in an xwidget  -*- lexical-binding: t; -*-
+;;; org-xlatex.el --- Instant LaTeX preview in an xwidget  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2023  ksqsf
 
@@ -74,7 +74,7 @@
     (error "Your Emacs was not built with Xwidget support")))
 
 (defgroup org-xlatex nil
-  "Instant LaTeX preview using xwidget and mathjax"
+  "Instant LaTeX preview using xwidget and mathjax."
   :group 'org
   :prefix "org-xlatex-")
 (defcustom org-xlatex-width 400
@@ -168,13 +168,13 @@ which is controlled by `org-xlatex-frame-adaptive-size'.")
 
 ;;;###autoload
 (define-minor-mode org-xlatex-mode
-  "Toggle org-xlatex-mode.
+  "Toggle `org-xlatex-mode'.
 Interactively with no argument, this command tggles the mode.
 A positive prefix argument enables the mode, any other prefix
 argument disables it.  From Lisp, argument omitted or nil enables
 the mode, `toggle' toggles the state.
 
-When org-xlatex-mode is enabled, a child frame appears with the
+When `org-xlatex-mode' is enabled, a child frame appears with the
 preview of the mathematical formula (LaTeX math formula) whenevr
 the point is at a formula."
   :init-value nil
@@ -210,7 +210,7 @@ the point is at a formula."
     (org-xlatex--hide)))
 
 (defun org-xlatex--ensure-frame ()
-  "Get the current org-xlatex-frame; initialize one if it does not exist."
+  "Get the current `org-xlatex-frame'; initialize one if it does not exist."
   (if (and org-xlatex-frame (frame-live-p org-xlatex-frame))
       org-xlatex-frame
     (org-xlatex--cleanup)
@@ -234,7 +234,9 @@ the point is at a formula."
     org-xlatex-frame))
 
 (defun org-xlatex--xwidget-webkit-callback (xwidget xwidget-event-type)
-  "`xwidget-webkit-callback' but restricted to javascript-callback."
+  "`xwidget-webkit-callback' but restricted to javascript-callback.
+
+XWIDGET instance, XWIDGET-EVENT-TYPE depends on the originating xwidget."
   (if (not (buffer-live-p (xwidget-buffer xwidget)))
       (xwidget-log
        "error: callback called for xwidget with dead buffer")
@@ -272,7 +274,7 @@ the point is at a formula."
           (buffer-substring-no-properties beg end))))))
 
 (defun org-xlatex--escape (latex)
-  "Escape LaTeX code so that it can be used as JS strings."
+  "Escape LATEX code so that it can be used as JS strings."
   (string-replace "\n" " " (string-replace "'" "\\'" (string-replace "\\" "\\\\" latex))))
 
 (defun org-xlatex--build-js (latex)
@@ -283,7 +285,8 @@ the point is at a formula."
 (defun org-xlatex--resize (w h)
   "Resize both the xwidget and its container.
 
-This function will call `org-xlatex-size-function'."
+W is the computed default width, and H the computed default
+height.  They will be transformed by `org-xlatex-size-function'."
   (let* ((real-size (funcall org-xlatex-size-function (cons w h)))
          (real-w (car real-size))
          (real-h (cdr real-size)))
@@ -293,14 +296,18 @@ This function will call `org-xlatex-size-function'."
 (defun org-xlatex--position (x y)
   "Position `org-xlatex-frame' correctly.
 
-This function will call `org-xlatex-position-function'."
+X is the computed default x coordinate, and Y the computed
+default y coordinate.  They will be transformed by
+`org-xlatex-position-function'."
   (let* ((xy1 (funcall org-xlatex-position-function (cons x y)))
          (x1 (car xy1))
          (y1 (cdr xy1)))
     (set-frame-position org-xlatex-frame x1 y1)))
 
 (defun org-xlatex--expose (parent-frame)
-  "Expose the child frame."
+  "Expose the child frame.
+
+PARENT-FRAME is the frame where this function is called."
   (set-frame-parameter org-xlatex-frame 'parent-frame parent-frame)
   (make-frame-visible org-xlatex-frame)
   (if (not org-xlatex-frame-adaptive-size)
@@ -336,10 +343,12 @@ This function will call `org-xlatex-position-function'."
       (org-xlatex--position x y))))
 
 (defun org-xlatex--hide ()
+  "Hide `org-xlatex-frame'."
   (when (and org-xlatex-frame (frame-live-p org-xlatex-frame))
     (make-frame-invisible org-xlatex-frame)))
 
 (defun org-xlatex--update (latex)
+  "Update the preview with the updated LaTeX code LATEX."
   (org-xlatex--ensure-frame)
   (setq org-xlatex-last-latex latex)
   (setq org-xlatex-last-js (org-xlatex--build-js latex))
@@ -360,6 +369,7 @@ this, chances are you will see a blank preview."
     (org-xlatex--expose org-xlatex-last-frame)))
 
 (defun org-xlatex--reset-frame ()
+  "Reset the internal states of `org-xlatex-mode'."
   (org-xlatex--cleanup)
   (org-xlatex--ensure-frame))
 (with-eval-after-load 'tab-bar
