@@ -65,7 +65,7 @@
 
 ;;; Code:
 
-(require 'org)
+(require 'org-element)
 (require 'xwidget)
 (require 'pixel-scroll)
 
@@ -90,7 +90,7 @@
   :type 'bool
   :group 'org-xlatex)
 (defcustom org-xlatex-frame-adaptive-size t
-  "Automatically adjust the width and/or the height of the preview frame when necessary."
+  "Automatically adjust the width and/or the height of the preview frame."
   :type 'bool
   :group 'org-xlatex)
 (defcustom org-xlatex-position-function #'identity
@@ -124,7 +124,9 @@ the preview child frame.
 
 The default size is (`org-xlatex-width' . `org-xlatex-height'),
 but extended accordingly when the LaTeX preview gets too large,
-which is controlled by `org-xlatex-frame-adaptive-size'.")
+which is controlled by `org-xlatex-frame-adaptive-size'."
+  :type 'function
+  :group 'org-xlatex)
 
 
 (defvar org-xlatex-timer nil)
@@ -185,7 +187,10 @@ the point is at a formula."
     (org-xlatex--teardown)))
 
 (defun org-xlatex--setup ()
-  "Arrange the org-xlatex frame to be displayed when the point enters LaTeX fragments or environments."
+  "Arrange the org-xlatex frame to be displayed when appropriate.
+
+The frame will be displayed when the point enters LaTeX fragments
+or environments."
   (org-xlatex--cleanup)
   (when (and org-xlatex-timer (timerp org-xlatex-timer))
     (cancel-timer org-xlatex-timer))
