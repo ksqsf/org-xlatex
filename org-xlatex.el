@@ -6,7 +6,7 @@
 ;; URL: https://github.com/ksqsf/org-xlatex
 ;; Keywords: convenience, org, tex, preview, xwidget
 ;; Version: 0.1
-;; Package-Requires: ((emacs "29.1") (org "9.6"))
+;; Package-Requires: ((emacs "29.1"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
