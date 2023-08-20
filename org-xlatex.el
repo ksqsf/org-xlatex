@@ -129,15 +129,15 @@ which is controlled by `org-xlatex-frame-adaptive-size'."
   :group 'org-xlatex)
 
 
-(defvar org-xlatex-timer nil)
-(defvar org-xlatex-frame nil
+(defvar org-xlatex--timer nil)
+(defvar org-xlatex--frame nil
   "The child frame used by org-xlatex.")
-(defvar org-xlatex-xwidget nil
+(defvar org-xlatex--xwidget nil
   "The xwidget used by org-xlatex.")
-(defconst org-xlatex-html-uri (concat "file://" (expand-file-name "org-xlatex.html" (file-name-directory (or load-file-name buffer-file-name)))))
-(defvar org-xlatex-last-latex)
-(defvar org-xlatex-last-js)
-(defvar org-xlatex-last-frame)
+(defconst org-xlatex--html-uri (concat "file://" (expand-file-name "org-xlatex.html" (file-name-directory (or load-file-name buffer-file-name)))))
+(defvar org-xlatex--last-latex)
+(defvar org-xlatex--last-js)
+(defvar org-xlatex--last-frame)
 
 (defvar org-xlatex-frame-parameters
   '((left . -1)
@@ -192,14 +192,18 @@ the point is at a formula."
 The frame will be displayed when the point enters LaTeX fragments
 or environments."
   (org-xlatex--cleanup)
-  (when (and org-xlatex-timer (timerp org-xlatex-timer))
-    (cancel-timer org-xlatex-timer))
-  (setq org-xlatex-timer (run-with-idle-timer 0.1 'repeat 'org-xlatex--timer-function)))
+  (when (and org-xlatex--timer (timerp org-xlatex--timer))
+    (cancel-timer org-xlatex--timer))
+  (setq org-xlatex--timer (run-with-idle-timer 0.1 'repeat #'org-xlatex--timer-function))
+  (add-hook 'tab-bar-mode-hook #'org-xlatex--reset-frame)
+  (add-hook 'tab-line-mode-hook #'org-xlatex--reset-frame))
 
 (defun org-xlatex--teardown ()
   "Disable hooks and timers set up by org-xlatex."
-  (cancel-timer org-xlatex-timer)
-  (setq org-xlatex-timer nil)
+  (remove-hook 'tab-bar-mode-hook #'org-xlatex--reset-frame)
+  (remove-hook 'tab-line-mode-hook #'org-xlatex--reset-frame)
+  (cancel-timer org-xlatex--timer)
+  (setq org-xlatex--timer nil)
   (org-xlatex--cleanup))
 
 (defun org-xlatex--timer-function (&rest _ignored)
@@ -215,12 +219,12 @@ or environments."
     (org-xlatex--hide)))
 
 (defun org-xlatex--ensure-frame ()
-  "Get the current `org-xlatex-frame'; initialize one if it does not exist."
-  (if (and org-xlatex-frame (frame-live-p org-xlatex-frame))
-      org-xlatex-frame
+  "Get the current `org-xlatex--frame'; initialize one if it does not exist."
+  (if (and org-xlatex--frame (frame-live-p org-xlatex--frame))
+      org-xlatex--frame
     (org-xlatex--cleanup)
-    (setq org-xlatex-frame (make-frame org-xlatex-frame-parameters))
-    (with-selected-frame org-xlatex-frame
+    (setq org-xlatex--frame (make-frame org-xlatex-frame-parameters))
+    (with-selected-frame org-xlatex--frame
       (delete-other-windows)
       (switch-to-buffer " *org-xlatex*")
       (setq mode-line-format nil)
@@ -232,11 +236,11 @@ or environments."
       (set-window-dedicated-p nil t)
       (erase-buffer)
       (insert " ")
-      (setq org-xlatex-xwidget (xwidget-insert (point-min) 'webkit "org-xlatex" org-xlatex-width org-xlatex-height))
-      (xwidget-put org-xlatex-xwidget 'callback #'org-xlatex--xwidget-webkit-callback)
-      (xwidget-put org-xlatex-xwidget 'display-callback #'xwidget-webkit-display-callback)
-      (xwidget-webkit-goto-uri org-xlatex-xwidget org-xlatex-html-uri))
-    org-xlatex-frame))
+      (setq org-xlatex--xwidget (xwidget-insert (point-min) 'webkit "org-xlatex" org-xlatex-width org-xlatex-height))
+      (xwidget-put org-xlatex--xwidget 'callback #'org-xlatex--xwidget-webkit-callback)
+      (xwidget-put org-xlatex--xwidget 'display-callback #'xwidget-webkit-display-callback)
+      (xwidget-webkit-goto-uri org-xlatex--xwidget org-xlatex--html-uri))
+    org-xlatex--frame))
 
 (defun org-xlatex--xwidget-webkit-callback (xwidget xwidget-event-type)
   "`xwidget-webkit-callback' but restricted to javascript-callback.
@@ -257,12 +261,12 @@ XWIDGET instance, XWIDGET-EVENT-TYPE depends on the originating xwidget."
     (with-current-buffer " *org-xlatex*"
       (erase-buffer))
     (kill-buffer " *org-xlatex*"))
-  (when (and org-xlatex-xwidget (xwidget-live-p org-xlatex-xwidget))
-    (kill-xwidget org-xlatex-xwidget)
-    (setq org-xlatex-xwidget nil))
-  (when (and org-xlatex-frame (frame-live-p org-xlatex-frame))
-    (delete-frame org-xlatex-frame)
-    (setq org-xlatex-frame nil)))
+  (when (and org-xlatex--xwidget (xwidget-live-p org-xlatex--xwidget))
+    (kill-xwidget org-xlatex--xwidget)
+    (setq org-xlatex--xwidget nil))
+  (when (and org-xlatex--frame (frame-live-p org-xlatex--frame))
+    (delete-frame org-xlatex--frame)
+    (setq org-xlatex--frame nil)))
 
 (defun org-xlatex--latex-at-point ()
   "Obtain the contents of the LaTeX fragment or environment at point."
@@ -271,7 +275,7 @@ XWIDGET instance, XWIDGET-EVENT-TYPE depends on the originating xwidget."
               (eq 'latex-environment (org-element-type context)))
       (let ((beg (org-element-property :begin context))
             (end (- (org-element-property :end context)
-	            (org-element-property :post-blank context))))
+                    (org-element-property :post-blank context))))
         (if org-xlatex-position-indicator
             (concat (buffer-substring-no-properties beg (point))
                     "{\\color{red}|}"
@@ -295,11 +299,11 @@ height.  They will be transformed by `org-xlatex-size-function'."
   (let* ((real-size (funcall org-xlatex-size-function (cons w h)))
          (real-w (car real-size))
          (real-h (cdr real-size)))
-    (set-frame-size org-xlatex-frame real-w real-h t)
-    (xwidget-resize org-xlatex-xwidget real-w real-h)))
+    (set-frame-size org-xlatex--frame real-w real-h t)
+    (xwidget-resize org-xlatex--xwidget real-w real-h)))
 
 (defun org-xlatex--position (x y)
-  "Position `org-xlatex-frame' correctly.
+  "Position `org-xlatex--frame' correctly.
 
 X is the computed default x coordinate, and Y the computed
 default y coordinate.  They will be transformed by
@@ -307,26 +311,26 @@ default y coordinate.  They will be transformed by
   (let* ((xy1 (funcall org-xlatex-position-function (cons x y)))
          (x1 (car xy1))
          (y1 (cdr xy1)))
-    (set-frame-position org-xlatex-frame x1 y1)))
+    (set-frame-position org-xlatex--frame x1 y1)))
 
 (defun org-xlatex--expose (parent-frame)
   "Expose the child frame.
 
 PARENT-FRAME is the frame where this function is called."
-  (set-frame-parameter org-xlatex-frame 'parent-frame parent-frame)
-  (make-frame-visible org-xlatex-frame)
+  (set-frame-parameter org-xlatex--frame 'parent-frame parent-frame)
+  (make-frame-visible org-xlatex--frame)
   (if (not org-xlatex-frame-adaptive-size)
       (org-xlatex--resize org-xlatex-width org-xlatex-height)
     ;; Adaptively set frame size
-    (xwidget-webkit-execute-script org-xlatex-xwidget "oxlSize();"
-                                   #'(lambda (size)
-                                       (let* ((w0 (frame-width org-xlatex-frame))
-                                              (h0 (frame-height org-xlatex-frame))
-                                              (w1 (ceiling (aref size 0)))
-                                              (h1 (ceiling (aref size 1)))
-                                              (w (max org-xlatex-width w0 w1))
-                                              (h (max org-xlatex-height h0 h1)))
-                                         (org-xlatex--resize w h)))))
+    (xwidget-webkit-execute-script org-xlatex--xwidget "oxlSize();"
+                                   (lambda (size)
+                                     (let* ((w0 (frame-width org-xlatex--frame))
+                                            (h0 (frame-height org-xlatex--frame))
+                                            (w1 (ceiling (aref size 0)))
+                                            (h1 (ceiling (aref size 1)))
+                                            (w (max org-xlatex-width w0 w1))
+                                            (h (max org-xlatex-height h0 h1)))
+                                       (org-xlatex--resize w h)))))
   (with-selected-frame parent-frame
     (let* ((context (org-element-context))
            (latex-beg (org-element-property :begin context))
@@ -348,16 +352,16 @@ PARENT-FRAME is the frame where this function is called."
       (org-xlatex--position x y))))
 
 (defun org-xlatex--hide ()
-  "Hide `org-xlatex-frame'."
-  (when (and org-xlatex-frame (frame-live-p org-xlatex-frame))
-    (make-frame-invisible org-xlatex-frame)))
+  "Hide `org-xlatex--frame'."
+  (when (and org-xlatex--frame (frame-live-p org-xlatex--frame))
+    (make-frame-invisible org-xlatex--frame)))
 
 (defun org-xlatex--update (latex)
   "Update the preview with the updated LaTeX code LATEX."
   (org-xlatex--ensure-frame)
-  (setq org-xlatex-last-latex latex)
-  (setq org-xlatex-last-js (org-xlatex--build-js latex))
-  (xwidget-webkit-execute-script org-xlatex-xwidget org-xlatex-last-js))
+  (setq org-xlatex--last-latex latex)
+  (setq org-xlatex--last-js (org-xlatex--build-js latex))
+  (xwidget-webkit-execute-script org-xlatex--xwidget org-xlatex--last-js))
 
 (defun org-xlatex-preview ()
   "Preview the LaTeX formula inside a child frame at the point.
@@ -367,20 +371,16 @@ is due to MathJax's asynchronous typesetting process: sometimes
 the first few typesetting requests are ignored (during the
 initialization of mathjax).  Therefore, if you directly call
 this, chances are you will see a blank preview."
-  (setq org-xlatex-last-frame (selected-frame))
+  (setq org-xlatex--last-frame (selected-frame))
   (org-xlatex--ensure-frame)
   (when-let ((latex (org-xlatex--latex-at-point)))
     (org-xlatex--update latex)
-    (org-xlatex--expose org-xlatex-last-frame)))
+    (org-xlatex--expose org-xlatex--last-frame)))
 
 (defun org-xlatex--reset-frame ()
   "Reset the internal states of `org-xlatex-mode'."
   (org-xlatex--cleanup)
   (org-xlatex--ensure-frame))
-(with-eval-after-load 'tab-bar
-  (add-hook 'tab-bar-mode-hook #'org-xlatex--reset-frame))
-(with-eval-after-load 'tab-line
-  (add-hook 'tab-line-mode-hook #'org-xlatex--reset-frame))
 
 (provide 'org-xlatex)
 ;;; org-xlatex.el ends here
